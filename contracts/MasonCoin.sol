@@ -15,20 +15,20 @@ import 'zeppelin-solidity/contracts/SafeMath.sol';
 contract MasonCoin {
   uint minerReward;
   uint timePerMint;
-  uint loonPerMint;
+  uint masonsPerMint;
   uint currentBlock;
   uint lastTime;
   uint endSupply;
   uint currentSupply;
   mapping (uint => uint) totalBidBlock;
 
-   struct Loonatic {
+   struct Masonite {
     uint coins;
     uint currentBid;
     uint currentBlockBid;
    }
 
-    mapping (address => Loonatic) looney;
+    mapping (address => Masonite) masons;
 
     modifier mintTime() {
       if ((now-lastTime)<timePerMint) throw;
@@ -44,7 +44,7 @@ contract MasonCoin {
 
   function MasonCoin() {
     currentBlock=0;
-    loonPerMint=5;
+    masonsPerMint=5;
     minerReward=1;
     timePerMint = 600000; //10 minutes
     currentSupply=0;
@@ -57,30 +57,29 @@ contract MasonCoin {
 
   function checkUpdateBlock(address miner) {
     if ((now-lastTime)<timePerMint) {
-
       lastTime=now;
       currentBlock+=1;
     }
   }
 
   function moveUserBalance(address user) private returns (bool success)  {
-    Loonatic ourUser = looney[user];
-    uint userBid = looney[user].currentBid;
-    uint userBidBlock = looney[user].currentBlockBid;
+    Masonite ourUser = masons[user];
+    uint userBid = masons[user].currentBid;
+    uint userBidBlock = masons[user].currentBlockBid;
     uint totalBid = totalBidBlock[userBidBlock];
     if ((totalBid>0) && (userBid>0)) {
-      looney[user].coins+=(userBid/totalBid) * loonPerMint;
-      loney[user].currentBid=0;
+      masons[user].coins+=(userBid/totalBid) * masonsPerMint;
+      masons[user].currentBid=0;
       return true;
     }
     return false;
   }
 
-  function checkBidDone() {
+  function checkBidDone(address user) {
     if ((now-lastTime)>=timePerMint) {
-      looney[user].coins+=minerReward;
+      masons[user].coins+=minerReward;
       lastTime=now;
-      currentSupply+=loonPerMint;
+      currentSupply+=masonsPerMint;
       currentBlock+=1;
     }
   }
@@ -88,8 +87,8 @@ contract MasonCoin {
   //checks if we should update current block
   //moves all bids to balance except current block
 
-  function stanardCalls(address user) {
-    checkBidDone();
+  function standardCalls(address user) private returns (bool success) {
+    checkBidDone(user);
     moveUserBalance(user);
   }
 
@@ -97,8 +96,8 @@ contract MasonCoin {
   function bid(uint amountWei) payable correctAmount(amountWei, msg.value) returns (bool success) {
     standardCalls(msg.sender);
     totalBidBlock[currentBlock]+=msg.value;
-    looney[msg.sender].currentBid+=msg.value;
-    looney[msg.sender].currentBlockBid=currentBlock;
+    masons[msg.sender].currentBid+=msg.value;
+    masons[msg.sender].currentBlockBid=currentBlock;
   }
 
 
@@ -106,7 +105,7 @@ contract MasonCoin {
   //moves all bids to balance except unfinished block
   //transfers eth
   //supports foundationID
-  function withdrawLoon() {
+  function withdrawMason() {
     standardCalls(msg.sender);
     //transfer
   }

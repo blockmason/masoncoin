@@ -12,9 +12,21 @@ contract('MasonCoin', function(accounts) {
     it("iniatiates the contract", function() {
             return MasonCoin.new().then(function(instance) {
             u = instance;
-                return u.getCurrentBlock.call()
-            }).then(function(currentBlock) {
-                console.log(currentBlock);
+                return u.getNow.call()
+            }).then(function(timenow) {
+                console.log(timenow);
             });
-        });
+    });
+
+    it("bid throws when the amount sent doesn't match the amount said", function() {
+            return MasonCoin.new().then(function(instance) {
+            u = instance;
+                return u.bid(5, {from: account1, value: 1});
+            }).then(function(error) {
+                console.log("error = " + error.toString());
+                assert.equal(error.toString(),  "Error: VM Exception while processing transaction: invalid opcode", error)
+            });
+    });
+
+
 });
