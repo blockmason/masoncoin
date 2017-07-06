@@ -1,5 +1,7 @@
 pragma solidity ^0.4.11;
 import 'zeppelin-solidity/contracts/SafeMath.sol';
+import 'zeppelin-solidity/contracts/token/ERC20Basic.sol';
+import 'zeppelin-solidity/contracts/token/ERC20.sol';
 
 //decisions:
 //must have bid for new block or if blocktime is missed get reward of all blocks before
@@ -42,6 +44,9 @@ contract MasonCoin {
     _;
     }
 
+
+
+
   function MasonCoin() {
     currentBlock=0;
     masonsPerMint=5;
@@ -51,34 +56,54 @@ contract MasonCoin {
     lastTime=now;
   }
 
+  ///////////////// ERC20
+
+  function balanceOf(address who) constant returns (uint) {
+    return masons[who].coins;
+  }
+
+  ///////////////////
+
+
+
+
+
+
+  function getFakeNow() private constant returns (uint fakeTime) {
+    return lastTime=lastTime + 700000;
+  }
+
   function getNow() constant returns (uint currentTime) {
     return now;
   }
 
-  function checkUpdateBlock(address miner) {
-    if ((now-lastTime)<timePerMint) {
-      lastTime=now;
-      currentBlock+=1;
-    }
+
+  function getLastTime() constant returns (uint last) {
+    return lastTime;
+  }
+
+  function getTimePerMint() constant returns (uint) {
+    return timePerMint;
   }
 
   function moveUserBalance(address user) private returns (bool success)  {
     Masonite ourUser = masons[user];
-    uint userBid = masons[user].currentBid;
-    uint userBidBlock = masons[user].currentBlockBid;
+    uint userBid = ourUser.currentBid;
+    uint userBidBlock = ourUser.currentBlockBid;
     uint totalBid = totalBidBlock[userBidBlock];
     if ((totalBid>0) && (userBid>0)) {
-      masons[user].coins+=(userBid/totalBid) * masonsPerMint;
-      masons[user].currentBid=0;
+      ourUser.coins+=(userBid/totalBid) * masonsPerMint;
+      ourUser.currentBid=0;
       return true;
     }
     return false;
   }
 
   function checkBidDone(address user) {
-    if ((now-lastTime)>=timePerMint) {
-      masons[user].coins+=minerReward;
-      lastTime=now;
+    //    if ((getFakeNow()-lastTime)>=timePerMint) {
+    if (700000>=timePerMint) {
+      masons[user].coins= masons[user].coins + minerReward;
+      lastTime=getNow();
       currentSupply+=masonsPerMint;
       currentBlock+=1;
     }
@@ -90,6 +115,7 @@ contract MasonCoin {
   function standardCalls(address user) private returns (bool success) {
     checkBidDone(user);
     moveUserBalance(user);
+    return true;
   }
 
 
@@ -98,6 +124,7 @@ contract MasonCoin {
     totalBidBlock[currentBlock]+=msg.value;
     masons[msg.sender].currentBid+=msg.value;
     masons[msg.sender].currentBlockBid=currentBlock;
+    return true;
   }
 
 
