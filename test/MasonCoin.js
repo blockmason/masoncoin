@@ -33,26 +33,31 @@ contract('MasonCoin', function(accounts) {
             u=instance;
             return u.bid(5, {from: account1, value: 5});
         }).then(function(transaction) {
-            console.log(transaction);
-//          assert.equal(error.toString(), "Error: VM Exception while processing transaction: invalid opcode", error)
     });
 });
 
 
     it("should mine a new block ", function() {
+        var startBalance=0;
         return MasonCoin.new().then(function(instance) {
             u=instance;
+            return u.balanceOf(account1);
+            // balance is 0
+        }).then(function(balance) {
+            startBalance=balance.toNumber();
+            assert.equal(balance.toNumber(), 0, "balance is not 0");
             return u.bid(5, {from: account1, value: 5});
         }).then(function(transaction) {
             return u.balanceOf(account1);
         }).then(function(balance) {
-            console.log("balance equals " + balance.toNumber());
+            // balance becomes 1 because we mined the block
             assert.equal(balance.toNumber(), 1, "balance is not 1");
             return u.bid(5, {from: account1, value: 5});
         }).then(function(transaction) {
             return u.balanceOf(account1);
         }).then(function(balance) {
-            console.log("balance equals " + balance.toNumber());
+            // balance becomes 1 + 1 + 5 because we won the mining rights again and won 100% of the previous block reward
+            assert.equal(balance.toNumber(), 7, "balance is not 7");
         });
 
     });
